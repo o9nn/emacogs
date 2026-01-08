@@ -115,7 +115,9 @@
             :documentation "Child process IDs"))
 
 (defvar infermacs-processes (make-hash-table :test 'eq)
-  "Registry of all processes.")
+  "Registry of all processes.
+Note: Not thread-safe. Process spawning and management should be
+synchronized if using concurrent operations.")
 
 (defvar infermacs-next-process-id 1
   "Next process ID.")

@@ -78,7 +78,9 @@
 ;;; Agent Registry
 
 (defvar agent-zero-agents (make-hash-table :test 'eq)
-  "Registry of all active agents.")
+  "Registry of all active agents.
+Note: Not thread-safe. Access should be synchronized if using
+concurrent operations.")
 
 (defvar agent-zero-next-id 1
   "Next agent ID to assign.")

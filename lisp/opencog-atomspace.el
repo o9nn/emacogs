@@ -145,10 +145,14 @@
 ;;; Atomspace
 
 (defvar opencog-atomspace (make-hash-table :test 'equal)
-  "The global atomspace - a hash table mapping atom keys to atoms.")
+  "The global atomspace - a hash table mapping atom keys to atoms.
+Note: Not thread-safe. Emacs Lisp is primarily single-threaded,
+but care should be taken if using async operations.")
 
 (defvar opencog-atomspace-index (make-hash-table :test 'eq)
-  "Index for fast atom lookup by type.")
+  "Index for fast atom lookup by type.
+Note: Not thread-safe. Emacs Lisp is primarily single-threaded,
+but care should be taken if using async operations.")
 
 (defun opencog-atomspace-clear ()
   "Clear the entire atomspace."
