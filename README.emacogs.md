@@ -12,6 +12,13 @@ Emacogs is an implementation of OpenCog as an Emacs-based neuro-symbolic atomspa
 - **Infermacs e-limbo**: Distributed cognitive kernels inspired by Inferno OS
 - **Org-mode Constellations**: Knowledge representation using org-mode
 
+### New in v1.1.0
+
+- **Persistence System**: Save and load atomspace with auto-save functionality
+- **Learning System**: Attention spreading, pattern mining, and Hebbian learning
+- **Visualization**: Enhanced graph visualization and system monitoring
+- **Interactive REPL**: Command-line interface for atomspace interaction
+
 ## Quick Start
 
 ### Loading Emacogs
@@ -52,12 +59,19 @@ M-x emacogs-demo
 
 Located in `lisp/`:
 
+### Core Modules (v1.0.0)
 - `opencog-atomspace.el` - Core atomspace implementation
 - `opencog-tensor-logic.el` - Probabilistic logic and inference
 - `agent-zero.el` - Multi-agent orchestration
 - `infermacs-limbo.el` - Distributed cognitive kernels
 - `opencog-org-constellations.el` - Org-mode knowledge integration
 - `emacogs.el` - Main integration module
+
+### New Modules (v1.1.0)
+- `opencog-persistence.el` - Atomspace persistence and serialization
+- `opencog-learning.el` - Learning algorithms and attention spreading
+- `opencog-visualization.el` - Visualization and monitoring
+- `emacogs-repl.el` - Interactive REPL interface
 
 ## Example Knowledge Bases
 
@@ -69,12 +83,22 @@ Located in `examples/knowledge/`:
 
 ## Interactive Commands
 
+### Core Commands
 - `M-x emacogs-initialize` - Initialize the system
 - `M-x emacogs-start` - Start the cognitive architecture
 - `M-x emacogs-stop` - Stop the system
 - `M-x emacogs-dashboard` - View system dashboard
 - `M-x emacogs-demo` - Run demonstration
 - `M-x emacogs-tutorial` - View tutorial
+
+### New Commands (v1.1.0)
+- `M-x emacogs-repl` - Start interactive REPL
+- `M-x opencog-persistence-save-atomspace` - Save atomspace to file
+- `M-x opencog-persistence-load-atomspace` - Load atomspace from file
+- `M-x opencog-learning-enable` - Enable learning system
+- `M-x opencog-learning-stats` - Show learning statistics
+- `M-x opencog-visualization-system-overview` - Display system overview
+- `M-x opencog-visualization-attention-map` - Show attention heat map
 
 ## Requirements
 

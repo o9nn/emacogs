@@ -5,7 +5,7 @@
 ;; Author: Emacogs Project
 ;; Maintainer: emacogs@gnu.org
 ;; Keywords: ai, cognitive-architecture, opencog, agents, distributed
-;; Version: 1.0.0
+;; Version: 1.1.0
 ;; Package-Requires: ((emacs "29.1") (org "9.0"))
 ;; URL: https://github.com/o9nn/emacogs
 
@@ -66,6 +66,31 @@
 ;;    - Semantic extraction
 ;;    - Modular deployment
 ;;
+;; New in v1.1.0:
+;;
+;; 6. Persistence System (opencog-persistence.el)
+;;    - Atomspace serialization/deserialization
+;;    - Auto-save functionality
+;;    - Backup management
+;;
+;; 7. Learning System (opencog-learning.el)
+;;    - Attention spreading
+;;    - Pattern mining
+;;    - Hebbian learning
+;;    - Forgetting mechanism
+;;
+;; 8. Visualization (opencog-visualization.el)
+;;    - Graph visualization
+;;    - Attention heat maps
+;;    - Agent activity display
+;;    - Truth value distributions
+;;
+;; 9. Interactive REPL (emacogs-repl.el)
+;;    - Command evaluation
+;;    - Query language
+;;    - Command history
+;;    - Auto-completion
+;;
 ;; Usage:
 ;;
 ;;   (require 'emacogs)
@@ -79,6 +104,8 @@
 ;;   M-x emacogs-stop             - Stop the cognitive system
 ;;   M-x emacogs-demo             - Run demonstration
 ;;   M-x emacogs-tutorial         - Interactive tutorial
+;;   M-x emacogs-repl             - Start interactive REPL
+;;   M-x opencog-visualization-system-overview - System overview
 
 ;;; Code:
 
@@ -88,6 +115,10 @@
 (require 'agent-zero)
 (require 'infermacs-limbo)
 (require 'opencog-org-constellations)
+(require 'opencog-persistence)
+(require 'opencog-learning)
+(require 'opencog-visualization)
+(require 'emacogs-repl)
 
 ;;; Customization
 
@@ -125,7 +156,7 @@
 (defvar emacogs-start-time nil
   "Time when Emacogs was started.")
 
-(defvar emacogs-version "1.0.0"
+(defvar emacogs-version "1.1.0"
   "Emacogs version.")
 
 ;;; Core Functions
@@ -175,6 +206,10 @@
     (infermacs-load-module 'reasoning)
     (infermacs-load-module 'learning)
     
+    ;; Enable new v1.1.0 features
+    (opencog-persistence-enable-auto-save)
+    (opencog-learning-enable)
+    
     (setq emacogs-running t)
     (message "Emacogs started successfully")))
 
@@ -186,6 +221,10 @@
     
     ;; Stop agent orchestration
     (agent-zero-stop-orchestration)
+    
+    ;; Disable v1.1.0 features
+    (opencog-persistence-disable-auto-save)
+    (opencog-learning-disable)
     
     (setq emacogs-running nil)
     (message "Emacogs stopped")))
@@ -304,8 +343,12 @@
       (insert "  M-x emacogs-start              Start the system\n")
       (insert "  M-x emacogs-stop               Stop the system\n")
       (insert "  M-x emacogs-restart            Restart the system\n")
+      (insert "  M-x emacogs-repl               Interactive REPL\n")
       (insert "  M-x emacogs-demo               Run demonstration\n")
       (insert "  M-x opencog-atomspace-display  View atomspace\n")
+      (insert "  M-x opencog-visualization-system-overview  System overview\n")
+      (insert "  M-x opencog-persistence-save-atomspace     Save atomspace\n")
+      (insert "  M-x opencog-learning-stats     Learning statistics\n")
       (insert "  M-x agent-zero-status          View agent status\n")
       (insert "  M-x infermacs-limbo-info       View Infermacs info\n")
       (insert "  M-x opencog-constellation-list View constellations\n")

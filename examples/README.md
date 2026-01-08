@@ -6,7 +6,8 @@ This directory contains examples and sample knowledge bases for the Emacogs cogn
 
 ```
 examples/
-├── emacogs-examples.el          # Interactive examples demonstrating Emacogs features
+├── emacogs-examples.el          # v1.0.0 interactive examples
+├── emacogs-v1.1-examples.el     # v1.1.0 new features examples
 ├── test-modules.sh              # Script to verify module installation
 └── knowledge/                   # Sample knowledge bases in org-mode
     ├── cognitive-architecture.org
@@ -28,14 +29,16 @@ examples/
 ```elisp
 (add-to-list 'load-path "/path/to/emacogs/examples")
 (require 'emacogs-examples)
+(require 'emacogs-v1.1-examples)  ; For v1.1.0 features
 ```
 
 3. Run example menu:
 ```
-M-x emacogs-examples-menu
+M-x emacogs-examples-menu        ; v1.0.0 examples
+M-x emacogs-v11-examples-menu    ; v1.1.0 examples
 ```
 
-### Individual Examples
+## v1.0.0 Examples (emacogs-examples.el)
 
 #### Example 1: Basic Atomspace
 ```
@@ -78,6 +81,38 @@ Demonstrates tensor creation and operations.
 M-x emacogs-example-complete-workflow
 ```
 Runs through a complete workflow integrating all components.
+
+## v1.1.0 Examples (emacogs-v1.1-examples.el)
+
+### Example 1: Persistence System
+```
+M-x emacogs-example-persistence
+```
+Demonstrates saving and loading atomspace, auto-save functionality, and backup management.
+
+### Example 2: Learning System
+```
+M-x emacogs-example-learning
+```
+Shows attention spreading, Hebbian learning, pattern mining, and forgetting mechanisms.
+
+### Example 3: Visualization
+```
+M-x emacogs-example-visualization
+```
+Displays system overview, attention heat maps, agent activity, and truth value distributions.
+
+### Example 4: Interactive REPL
+```
+M-x emacogs-example-repl-demo
+```
+Launches the REPL with sample commands for atomspace manipulation.
+
+### Example 5: Complete v1.1.0 Workflow
+```
+M-x emacogs-example-v11-workflow
+```
+Comprehensive workflow demonstrating all v1.1.0 features integrated together.
 
 ## Sample Knowledge Bases
 
@@ -161,10 +196,19 @@ This checks that all modules exist and have proper provide statements.
 
 ## Tips
 
+### v1.0.0 Features
 - Use `M-x emacogs-dashboard` to see system status
 - Use `M-x opencog-atomspace-display` to view the atomspace
 - Use `M-x agent-zero-status` to view agent status
 - Use `M-x infermacs-limbo-info` to view distributed system info
+
+### v1.1.0 Features
+- Use `M-x emacogs-repl` for interactive exploration
+- Use `M-x opencog-visualization-system-overview` for visual feedback
+- Use `M-x opencog-persistence-save-atomspace` to save your work
+- Use `M-x opencog-learning-stats` to monitor learning progress
+- Enable auto-save: `M-x opencog-persistence-enable-auto-save`
+- Enable learning: `M-x opencog-learning-enable`
 
 ## Troubleshooting
 
