@@ -1,0 +1,90 @@
+#+TITLE: Cognitive Architecture Knowledge Base
+#+AUTHOR: Emacogs Project
+#+DATE: 2026-01-08
+
+* Introduction
+
+This is a sample knowledge base demonstrating Emacogs integration with org-mode.
+
+* Cognitive Architectures
+
+** OpenCog
+
+OpenCog is a open-source artificial general intelligence framework.
+
+*** AtomSpace
+
+The AtomSpace is a hypergraph database for knowledge representation.
+
+*** PLN
+
+Probabilistic Logic Networks provide uncertain reasoning capabilities.
+
+** SOAR
+
+SOAR is a cognitive architecture for developing systems that exhibit intelligent behavior.
+
+** ACT-R
+
+ACT-R is a cognitive architecture focusing on modeling human cognition.
+
+* Artificial Intelligence
+
+** Machine Learning
+
+Machine Learning is a subset of AI focused on learning from data.
+
+*** Supervised Learning
+
+Supervised learning uses labeled training data.
+
+*** Unsupervised Learning
+
+Unsupervised learning finds patterns in unlabeled data.
+
+*** Reinforcement Learning
+
+Reinforcement learning learns through trial and error with rewards.
+
+** Natural Language Processing
+
+Natural Language Processing enables computers to understand human language.
+
+** Computer Vision
+
+Computer Vision enables machines to interpret visual information.
+
+* Neuro-Symbolic AI
+
+Neuro-symbolic AI combines neural networks with symbolic reasoning.
+
+** Benefits
+
+- Combines strengths of both approaches
+- Better interpretability
+- Improved reasoning capabilities
+- More robust generalization
+
+** Challenges
+
+- Integration complexity
+- Computational requirements
+- Knowledge representation
+- Learning algorithms
+
+* Tags and Connections                                                  :meta:
+
+** Concepts                                                          :concept:
+
+- Reasoning
+- Learning
+- Perception
+- Action
+- Memory
+
+** Relationships                                                 :relationship:
+
+- Inheritance
+- Association
+- Composition
+- Causation
