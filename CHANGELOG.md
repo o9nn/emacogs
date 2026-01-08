@@ -2,6 +2,51 @@
 
 All notable changes to the Emacogs cognitive architecture system.
 
+## [1.2.0] - In Development
+
+### Added
+
+#### Network Protocol (opencog-network.el)
+- Distributed atomspace synchronization protocol
+- `opencog-network-start-server` - Start network server for peer connections
+- `opencog-network-connect` - Connect to remote atomspace peer
+- `opencog-network-sync` - Synchronize atomspace with connected peers
+- Vector clock-based causality tracking
+- Delta-based synchronization for efficiency
+- Conflict resolution strategies (last-write-wins, highest-confidence, merge)
+- `opencog-network-distributed-query` - Execute queries across peers
+- `opencog-network-status` - Display network status
+- Auto-sync functionality with configurable intervals
+- JSON-based message protocol for interoperability
+
+#### ERT Test Suite (test/lisp/emacogs-test.el)
+- Comprehensive test suite for all modules
+- Truth value and attention value tests
+- Atom and atomspace operation tests
+- Pattern matching and query tests
+- PLN inference rule tests
+- Agent-Zero tests
+- Infermacs channel tests
+- Integration tests for knowledge inference workflows
+- `emacogs-test-run-all` - Run all tests interactively
+
+#### Documentation
+- CLAUDE.md - Development guide for AI assistants
+- Updated CHANGELOG.md with v1.2.0 features
+
+### Changed
+
+- Module count increased from 10 to 11
+- Added test infrastructure in test/lisp/
+- Enhanced documentation for contributors
+
+### Technical Details
+
+- Test suite uses ERT (Emacs Regression Testing)
+- Network protocol uses TCP with JSON messages
+- Vector clocks for distributed consistency
+- Merkle tree support planned for efficient delta detection
+
 ## [1.1.0] - 2026-01-08
 
 ### Added
@@ -156,6 +201,7 @@ This was the first complete implementation of Emacogs as a cognitive architectur
 
 ## Version History Summary
 
+- **v1.2.0** (In Development): Network protocol, ERT test suite, CLAUDE.md
 - **v1.1.0** (2026-01-08): Added persistence, learning, visualization, REPL
 - **v1.0.0** (2026-01-06): Initial release with core cognitive architecture
 
@@ -163,12 +209,12 @@ This was the first complete implementation of Emacogs as a cognitive architectur
 
 Potential features for future versions:
 
-### v1.2.0 (Planned)
-- Network protocol for distributed atomspace synchronization
-- ERT test suite for automated testing
-- Performance benchmarking framework
-- Advanced learning algorithms (MOSES-style evolution)
-- Integration with external knowledge bases
+### v1.2.0 (In Progress)
+- [x] Network protocol for distributed atomspace synchronization
+- [x] ERT test suite for automated testing
+- [ ] Performance benchmarking framework
+- [ ] Advanced learning algorithms (MOSES-style evolution)
+- [ ] Integration with external knowledge bases
 
 ### v1.3.0 (Planned)
 - Natural language processing integration
