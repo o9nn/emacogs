@@ -21,9 +21,15 @@ on:
       - '.github/workflows/emacogs-tests.yml'
   workflow_dispatch:
 
+# Minimal permissions for security
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         emacs_version:
@@ -69,6 +75,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     name: Byte-compile Check
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout repository

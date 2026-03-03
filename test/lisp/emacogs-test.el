@@ -32,7 +32,9 @@
 (require 'ert)
 (require 'cl-lib)
 
-;; Add lisp directory to load path
+;; Add lisp directory to load path when running from file
+;; When evaluating interactively, ensure load-path is set manually or
+;; run with: emacs --batch -L /path/to/lisp -l emacogs-test.el
 (when load-file-name
   (add-to-list 'load-path (expand-file-name "../../lisp" (file-name-directory load-file-name))))
 
