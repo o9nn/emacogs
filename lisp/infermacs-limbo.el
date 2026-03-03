@@ -77,14 +77,17 @@
   (if (and (> (infermacs-channel-capacity channel) 0)
            (< (length (infermacs-channel-buffer channel))
               (infermacs-channel-capacity channel)))
-      ;; Buffered channel with space
-      (push value (infermacs-channel-buffer channel))
+      ;; Buffered channel with space - append to end for FIFO
+      (setf (infermacs-channel-buffer channel)
+            (append (infermacs-channel-buffer channel) (list value)))
     ;; Unbuffered or full - in simplified version, just buffer it
-    (push value (infermacs-channel-buffer channel))))
+    (setf (infermacs-channel-buffer channel)
+          (append (infermacs-channel-buffer channel) (list value)))))
 
 (defun infermacs-channel-receive (channel)
   "Receive value from CHANNEL. Returns nil if channel is closed and empty."
   (if (infermacs-channel-buffer channel)
+      ;; Pop from front for FIFO
       (pop (infermacs-channel-buffer channel))
     (when (infermacs-channel-closed channel)
       nil)))

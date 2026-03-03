@@ -30,6 +30,16 @@ All notable changes to the Emacogs cognitive architecture system.
 - Integration tests for knowledge inference workflows
 - `emacogs-test-run-all` - Run all tests interactively
 
+#### CI/CD Integration (.github/workflows/emacogs-tests.yml)
+- GitHub Actions workflow for automated testing
+- Matrix testing against Emacs 29.1 and 29.3
+- Byte-compilation verification
+- Module syntax checking
+
+#### Org Constellation Functions (opencog-org-constellations.el)
+- `opencog-create-constellation-from-string` - Create constellation from org-mode string
+- `opencog-org-string-to-atomspace` - Parse org content from string
+
 #### Documentation
 - CLAUDE.md - Development guide for AI assistants
 - Updated CHANGELOG.md with v1.2.0 features
@@ -39,6 +49,13 @@ All notable changes to the Emacogs cognitive architecture system.
 - Module count increased from 10 to 11
 - Added test infrastructure in test/lisp/
 - Enhanced documentation for contributors
+- Added CI/CD workflow in .github/workflows/
+
+### Fixed
+
+- `infermacs-channel-send` and `infermacs-channel-receive` now implement proper FIFO queue ordering
+- Test variable name `agent-zero-next-id` corrected from `agent-zero-next-agent-id`
+- Pattern variable tests use correct symbol escaping (`\?x` instead of `?x`)
 
 ### Technical Details
 

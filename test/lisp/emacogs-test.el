@@ -32,8 +32,11 @@
 (require 'ert)
 (require 'cl-lib)
 
-;; Add lisp directory to load path
-(add-to-list 'load-path (expand-file-name "../../lisp" (file-name-directory load-file-name)))
+;; Add lisp directory to load path when running from file
+;; When evaluating interactively, ensure load-path is set manually or
+;; run with: emacs --batch -L /path/to/lisp -l emacogs-test.el
+(when load-file-name
+  (add-to-list 'load-path (expand-file-name "../../lisp" (file-name-directory load-file-name))))
 
 (require 'opencog-atomspace)
 (require 'opencog-tensor-logic)
@@ -200,8 +203,8 @@
 (ert-deftest emacogs-test-pattern-variable ()
   "Test variable pattern matching."
   (let* ((node (opencog-atom-create-node 'ConceptNode "Test")))
-    (should (opencog-pattern-match-atom '?x node))
-    (should (opencog-pattern-match-atom '?any node))))
+    (should (opencog-pattern-match-atom '\?x node))
+    (should (opencog-pattern-match-atom '\?any node))))
 
 (ert-deftest emacogs-test-query-execution ()
   "Test query execution."
@@ -263,7 +266,7 @@
 (ert-deftest emacogs-test-agent-creation ()
   "Test agent creation."
   (let ((agent-zero-agents (make-hash-table :test 'equal))
-        (agent-zero-next-agent-id 0))
+        (agent-zero-next-id 0))
     (let ((agent (agent-zero-create "TestAgent" 'worker '(reasoning) #'ignore)))
       (should (agent-zero-agent-p agent))
       (should (equal (agent-zero-agent-name agent) "TestAgent"))
@@ -273,7 +276,7 @@
 (ert-deftest emacogs-test-agent-has-capabilities ()
   "Test agent capability checking."
   (let ((agent-zero-agents (make-hash-table :test 'equal))
-        (agent-zero-next-agent-id 0))
+        (agent-zero-next-id 0))
     (let ((agent (agent-zero-create "TestAgent" 'worker '(reasoning learning) #'ignore)))
       (should (agent-zero-agent-has-capabilities agent '(reasoning)))
       (should (agent-zero-agent-has-capabilities agent '(learning)))
@@ -283,12 +286,17 @@
 (ert-deftest emacogs-test-agent-message-send ()
   "Test agent message sending."
   (let ((agent-zero-agents (make-hash-table :test 'equal))
-        (agent-zero-next-agent-id 0))
-    (let ((agent (agent-zero-create "TestAgent" 'worker '(reasoning) #'ignore)))
-      (agent-zero-send-message agent "Hello")
-      (let ((inbox (agent-zero-agent-inbox agent)))
+        (agent-zero-next-id 0))
+    (let* ((sender (agent-zero-create "Sender" 'worker '(reasoning) #'ignore))
+           (receiver (agent-zero-create "Receiver" 'worker '(learning) #'ignore)))
+      (agent-zero-send-message (agent-zero-agent-id sender)
+                               (agent-zero-agent-id receiver)
+                               'inform
+                               "Hello")
+      (let ((inbox (agent-zero-agent-inbox receiver)))
         (should (= (length inbox) 1))
-        (should (equal (car inbox) "Hello"))))))
+        (should (agent-zero-message-p (car inbox)))
+        (should (equal (agent-zero-message-content (car inbox)) "Hello"))))))
 
 ;;; ===========================================================================
 ;;; Infermacs Channel Tests
@@ -374,7 +382,7 @@
 (ert-deftest emacogs-test-multi-agent-task ()
   "Test multi-agent task creation and assignment."
   (let ((agent-zero-agents (make-hash-table :test 'equal))
-        (agent-zero-next-agent-id 0)
+        (agent-zero-next-id 0)
         (agent-zero-tasks nil))
     ;; Create agents with different capabilities
     (agent-zero-create "Reasoner" 'reasoning '(logic inference) #'ignore)
