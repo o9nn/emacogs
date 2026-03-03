@@ -135,6 +135,52 @@
     (puthash id constellation opencog-constellations)
     constellation))
 
+(defun opencog-org-string-to-atomspace (org-content)
+  "Parse ORG-CONTENT string and convert its contents to atomspace."
+  (with-temp-buffer
+    (insert org-content)
+    (org-mode)
+    (let* ((tree (org-element-parse-buffer))
+           (headlines (org-element-map tree 'headline #'identity))
+           (nodes nil)
+           (atom-links nil))
+
+      ;; Convert headlines to nodes
+      (dolist (headline headlines)
+        (let ((node (opencog-org-headline-to-node headline)))
+          (opencog-atomspace-add node)
+          (push node nodes)))
+
+      ;; Create hierarchical links
+      (let ((prev-nodes (make-vector 10 nil)))
+        (dolist (headline headlines)
+          (let* ((level (org-element-property :level headline))
+                 (title (org-element-property :raw-value headline))
+                 (current-node (opencog-atomspace-get 'ConceptNode title))
+                 (parent-node (aref prev-nodes (1- level))))
+            (when (and parent-node current-node)
+              (let ((link (opencog-atom-create-link
+                           'InheritanceLink
+                           (list current-node parent-node))))
+                (opencog-atomspace-add link)
+                (push link atom-links)))
+            (aset prev-nodes level current-node))))
+
+      (list :nodes nodes :links atom-links))))
+
+(defun opencog-create-constellation-from-string (name org-content)
+  "Create a constellation named NAME from ORG-CONTENT string."
+  (let* ((id (gensym "const-"))
+         (parsed (opencog-org-string-to-atomspace org-content))
+         (constellation (opencog-constellation-create
+                         :id id
+                         :name name
+                         :nodes (plist-get parsed :nodes)
+                         :links (plist-get parsed :links)
+                         :org-file nil)))
+    (puthash id constellation opencog-constellations)
+    constellation))
+
 (defun opencog-constellation-add-node (constellation node)
   "Add NODE to CONSTELLATION."
   (push node (opencog-constellation-nodes constellation))
