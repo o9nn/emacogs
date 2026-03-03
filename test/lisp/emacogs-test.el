@@ -517,9 +517,12 @@
        (opencog-atom-create-link 'InheritanceLink (list a c)))
       ;; Mine patterns
       (let ((patterns (opencog-learning-mine-patterns 2)))
-        ;; Should find InheritanceLink with arity 2 as frequent
-        (should (> (length patterns) 0))
-        (should (cl-some (lambda (p) (eq (caar p) 'InheritanceLink))
+        ;; Should find at least one pattern with frequency >= 2
+        (should (>= (length patterns) 1))
+        ;; The InheritanceLink pattern with arity 2 should be found
+        (should (cl-some (lambda (p)
+                          (and (eq (caar p) 'InheritanceLink)
+                               (>= (cadr p) 2)))
                          patterns))))))
 
 (ert-deftest emacogs-test-learning-hebbian-update ()

@@ -136,7 +136,7 @@ Returns benchmark result structure."
            (mean (/ total iterations))
            (min-t (apply #'min times))
            (max-t (apply #'max times))
-           (variance (/ (apply #'+ (mapcar (lambda (t) (expt (- t mean) 2)) times))
+           (variance (/ (apply #'+ (mapcar (lambda (time-val) (expt (- time-val mean) 2)) times))
                        iterations))
            (std-dev (sqrt variance))
            (throughput (if (> mean 0) (/ 1.0 mean) 0)))
