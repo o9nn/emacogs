@@ -111,13 +111,13 @@ AMOUNT specifies how much attention to spread (default based on atom's STI)."
 (defun opencog-learning--increase-sti (atom amount)
   "Increase the STI of ATOM by AMOUNT."
   (let* ((av (or (opencog-atom-attention-value atom)
-                (opencog-attention-value-create 0 0 0)))
+                (opencog-attention-value-create :sti 0 :lti 0 :vlti 0)))
          (new-sti (+ (opencog-attention-value-sti av) amount)))
     (setf (opencog-atom-attention-value atom)
           (opencog-attention-value-create
-           new-sti
-           (opencog-attention-value-lti av)
-           (opencog-attention-value-vlti av)))))
+           :sti new-sti
+           :lti (opencog-attention-value-lti av)
+           :vlti (opencog-attention-value-vlti av)))))
 
 (defun opencog-learning-spread-attention-network (&optional iterations)
   "Spread attention across the atomspace network.
@@ -150,9 +150,9 @@ ITERATIONS specifies how many spreading steps to perform (default 5)."
                           (new-sti (* sti (- 1.0 opencog-learning-importance-decay-rate))))
                      (setf (opencog-atom-attention-value atom)
                            (opencog-attention-value-create
-                            new-sti
-                            (opencog-attention-value-lti av)
-                            (opencog-attention-value-vlti av)))
+                            :sti new-sti
+                            :lti (opencog-attention-value-lti av)
+                            :vlti (opencog-attention-value-vlti av)))
                      (cl-incf decayed-count)))))
              opencog-atomspace)
     decayed-count))

@@ -19,14 +19,31 @@ All notable changes to the Emacogs cognitive architecture system.
 - Auto-sync functionality with configurable intervals
 - JSON-based message protocol for interoperability
 
+#### Performance Benchmarking Framework (emacogs-benchmark.el)
+- Benchmark infrastructure for measuring operation performance
+- `emacogs-benchmark-run-all` - Run all benchmarks
+- `emacogs-benchmark-atomspace` - Benchmark atomspace operations
+- `emacogs-benchmark-inference` - Benchmark PLN inference
+- `emacogs-benchmark-report` - Display benchmark results
+- `emacogs-benchmark-compare` - Compare benchmark results
+- Time formatting utilities for ns/µs/ms/s display
+- Throughput calculation (ops/s, K ops/s, M ops/s)
+- Warmup and measurement phases for accurate timing
+
 #### ERT Test Suite (test/lisp/emacogs-test.el)
-- Comprehensive test suite for all modules
+- Comprehensive test suite for all modules (58 tests)
 - Truth value and attention value tests
 - Atom and atomspace operation tests
 - Pattern matching and query tests
 - PLN inference rule tests
 - Agent-Zero tests
 - Infermacs channel tests
+- Persistence tests for serialization/deserialization
+- Learning system tests (Hebbian, attention spreading)
+- Visualization tests
+- Network protocol tests
+- REPL command tests
+- Benchmark framework tests
 - Integration tests for knowledge inference workflows
 - `emacogs-test-run-all` - Run all tests interactively
 
@@ -46,16 +63,20 @@ All notable changes to the Emacogs cognitive architecture system.
 
 ### Changed
 
-- Module count increased from 10 to 11
+- Module count increased from 10 to 12 (added network, benchmark)
 - Added test infrastructure in test/lisp/
 - Enhanced documentation for contributors
 - Added CI/CD workflow in .github/workflows/
+- `opencog-atomspace-stats` now returns complete statistics including `:node-count`, `:link-count`, `:type-count`
 
 ### Fixed
 
 - `infermacs-channel-send` and `infermacs-channel-receive` now implement proper FIFO queue ordering
 - Test variable name `agent-zero-next-id` corrected from `agent-zero-next-agent-id`
 - Pattern variable tests use correct symbol escaping (`\?x` instead of `?x`)
+- `opencog-persistence-deserialize-atom` now uses correct keyword arguments for `opencog-attention-value-create`
+- `opencog-learning--increase-sti` now uses correct keyword arguments for `opencog-attention-value-create`
+- `opencog-learning-decay-importance` now uses correct keyword arguments for `opencog-attention-value-create`
 
 ### Technical Details
 
@@ -63,6 +84,7 @@ All notable changes to the Emacogs cognitive architecture system.
 - Network protocol uses TCP with JSON messages
 - Vector clocks for distributed consistency
 - Merkle tree support planned for efficient delta detection
+- Benchmark framework uses warmup phases and garbage collection for accurate measurements
 
 ## [1.1.0] - 2026-01-08
 

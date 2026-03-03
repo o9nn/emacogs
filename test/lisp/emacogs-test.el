@@ -397,6 +397,386 @@
       (should (= (hash-table-count agent-zero-agents) 2)))))
 
 ;;; ===========================================================================
+;;; Persistence Tests
+;;; ===========================================================================
+
+(require 'opencog-persistence)
+
+(ert-deftest emacogs-test-persistence-serialize-atom ()
+  "Test atom serialization."
+  (let ((node (opencog-atom-create-node 'ConceptNode "Test"
+                                        (opencog-truth-value-simple 0.8 0.7))))
+    (let ((serialized (opencog-persistence-serialize-atom node)))
+      (should (eq (car serialized) 'atom))
+      (should (eq (plist-get (cdr serialized) :type) 'ConceptNode))
+      (should (equal (plist-get (cdr serialized) :name) "Test")))))
+
+(ert-deftest emacogs-test-persistence-deserialize-atom ()
+  "Test atom deserialization."
+  (let ((sexp '(atom :type ConceptNode :name "TestAtom"
+                     :outgoing nil
+                     :truth-value (:strength 0.9 :confidence 0.8)
+                     :attention-value nil)))
+    (let ((atom (opencog-persistence-deserialize-atom sexp)))
+      (should (opencog-atom-p atom))
+      (should (eq (opencog-atom-type atom) 'ConceptNode))
+      (should (equal (opencog-atom-name atom) "TestAtom"))
+      (should (= (opencog-truth-value-strength (opencog-atom-truth-value atom)) 0.9)))))
+
+(ert-deftest emacogs-test-persistence-serialize-roundtrip ()
+  "Test that serialize/deserialize is a roundtrip."
+  (let* ((node (opencog-atom-create-node 'PredicateNode "TestPred"
+                                         (opencog-truth-value-simple 0.5 0.5)))
+         (serialized (opencog-persistence-serialize-atom node))
+         (deserialized (opencog-persistence-deserialize-atom serialized)))
+    (should (eq (opencog-atom-type node) (opencog-atom-type deserialized)))
+    (should (equal (opencog-atom-name node) (opencog-atom-name deserialized)))))
+
+(ert-deftest emacogs-test-persistence-save-load-file ()
+  "Test saving and loading atomspace to/from file."
+  (let ((opencog-atomspace (make-hash-table :test 'equal))
+        (opencog-atomspace-index (make-hash-table :test 'eq))
+        (test-file (make-temp-file "emacogs-test" nil ".el")))
+    (unwind-protect
+        (progn
+          ;; Add some atoms
+          (opencog-atomspace-add
+           (opencog-atom-create-node 'ConceptNode "Alpha"))
+          (opencog-atomspace-add
+           (opencog-atom-create-node 'ConceptNode "Beta"))
+          (should (= (opencog-atomspace-size) 2))
+          ;; Save
+          (opencog-persistence-save-atomspace test-file)
+          (should (file-exists-p test-file))
+          ;; Clear and verify empty
+          (opencog-atomspace-clear)
+          (should (= (opencog-atomspace-size) 0))
+          ;; Load
+          (let ((loaded (opencog-persistence-load-atomspace test-file)))
+            (should (= loaded 2))
+            (should (= (opencog-atomspace-size) 2))))
+      ;; Cleanup
+      (when (file-exists-p test-file)
+        (delete-file test-file)))))
+
+;;; ===========================================================================
+;;; Learning Tests
+;;; ===========================================================================
+
+(require 'opencog-learning)
+
+(ert-deftest emacogs-test-learning-increase-sti ()
+  "Test increasing STI of an atom."
+  (let* ((opencog-atomspace (make-hash-table :test 'equal))
+         (opencog-atomspace-index (make-hash-table :test 'eq))
+         (node (opencog-atom-create-node 'ConceptNode "Test")))
+    (opencog-atomspace-add node)
+    ;; Initial STI should be 0
+    (should (= (opencog-attention-value-sti
+                (or (opencog-atom-attention-value node)
+                    (opencog-attention-value-create :sti 0 :lti 0 :vlti 0)))
+               0))
+    ;; Increase STI
+    (opencog-learning--increase-sti node 50)
+    (should (= (opencog-attention-value-sti (opencog-atom-attention-value node)) 50))))
+
+(ert-deftest emacogs-test-learning-decay-importance ()
+  "Test importance decay."
+  (let* ((opencog-atomspace (make-hash-table :test 'equal))
+         (opencog-atomspace-index (make-hash-table :test 'eq))
+         (opencog-learning-importance-decay-rate 0.1)
+         (node (opencog-atom-create-node 'ConceptNode "Test")))
+    (setf (opencog-atom-attention-value node)
+          (opencog-attention-value-create :sti 100 :lti 0 :vlti 0))
+    (opencog-atomspace-add node)
+    ;; Decay
+    (opencog-learning-decay-importance)
+    ;; STI should be reduced by 10%
+    (let ((sti (opencog-attention-value-sti (opencog-atom-attention-value node))))
+      (should (< sti 100))
+      (should (> sti 85)))))
+
+(ert-deftest emacogs-test-learning-mine-patterns ()
+  "Test pattern mining."
+  (let ((opencog-atomspace (make-hash-table :test 'equal))
+        (opencog-atomspace-index (make-hash-table :test 'eq)))
+    ;; Create multiple similar links
+    (let ((a (opencog-atom-create-node 'ConceptNode "A"))
+          (b (opencog-atom-create-node 'ConceptNode "B"))
+          (c (opencog-atom-create-node 'ConceptNode "C"))
+          (d (opencog-atom-create-node 'ConceptNode "D")))
+      (opencog-atomspace-add a)
+      (opencog-atomspace-add b)
+      (opencog-atomspace-add c)
+      (opencog-atomspace-add d)
+      (opencog-atomspace-add
+       (opencog-atom-create-link 'InheritanceLink (list a b)))
+      (opencog-atomspace-add
+       (opencog-atom-create-link 'InheritanceLink (list c d)))
+      (opencog-atomspace-add
+       (opencog-atom-create-link 'InheritanceLink (list a c)))
+      ;; Mine patterns
+      (let ((patterns (opencog-learning-mine-patterns 2)))
+        ;; Should find at least one pattern with frequency >= 2
+        (should (>= (length patterns) 1))
+        ;; The InheritanceLink pattern with arity 2 should be found
+        (should (cl-some (lambda (p)
+                          (and (eq (caar p) 'InheritanceLink)
+                               (>= (cadr p) 2)))
+                         patterns))))))
+
+(ert-deftest emacogs-test-learning-hebbian-update ()
+  "Test Hebbian learning update."
+  (let ((opencog-atomspace (make-hash-table :test 'equal))
+        (opencog-atomspace-index (make-hash-table :test 'eq))
+        (opencog-learning--statistics '(:patterns-mined 0 :atoms-forgotten 0
+                                        :attention-updates 0 :hebbian-updates 0)))
+    (let* ((a (opencog-atom-create-node 'ConceptNode "A"))
+           (b (opencog-atom-create-node 'ConceptNode "B"))
+           (link (opencog-atom-create-link 'SimilarityLink (list a b)
+                                           (opencog-truth-value-simple 0.5 0.5))))
+      ;; Set high attention on nodes
+      (setf (opencog-atom-attention-value a)
+            (opencog-attention-value-create :sti 100 :lti 0 :vlti 0))
+      (setf (opencog-atom-attention-value b)
+            (opencog-attention-value-create :sti 100 :lti 0 :vlti 0))
+      (opencog-atomspace-add a)
+      (opencog-atomspace-add b)
+      (opencog-atomspace-add link)
+      ;; Apply Hebbian update
+      (opencog-learning-hebbian-update link)
+      ;; Strength should increase
+      (should (> (opencog-truth-value-strength (opencog-atom-truth-value link)) 0.5)))))
+
+;;; ===========================================================================
+;;; Visualization Tests
+;;; ===========================================================================
+
+(require 'opencog-visualization)
+
+(ert-deftest emacogs-test-visualization-atom-display ()
+  "Test atom display string generation."
+  (let ((node (opencog-atom-create-node 'ConceptNode "TestNode"
+                                        (opencog-truth-value-simple 0.9 0.8))))
+    (let ((display (opencog-visualization--atom-display node)))
+      (should (stringp display))
+      (should (string-match-p "ConceptNode" display))
+      (should (string-match-p "TestNode" display))
+      (should (string-match-p "0.90" display)))))
+
+(ert-deftest emacogs-test-visualization-attention-bar ()
+  "Test attention bar creation."
+  (should (equal (opencog-visualization--attention-bar 60) "████"))
+  (should (equal (opencog-visualization--attention-bar 30) "███░"))
+  (should (equal (opencog-visualization--attention-bar 15) "██░░"))
+  (should (equal (opencog-visualization--attention-bar 5) "█░░░"))
+  (should (equal (opencog-visualization--attention-bar -5) "░░░░")))
+
+(ert-deftest emacogs-test-visualization-agent-state-icon ()
+  "Test agent state icons."
+  (should (equal (opencog-visualization--agent-state-icon 'running) "▶"))
+  (should (equal (opencog-visualization--agent-state-icon 'idle) "⏸"))
+  (should (equal (opencog-visualization--agent-state-icon 'waiting) "⏳"))
+  (should (equal (opencog-visualization--agent-state-icon 'terminated) "⏹")))
+
+(ert-deftest emacogs-test-visualization-performance-bar ()
+  "Test performance bar creation."
+  (should (equal (opencog-visualization--performance-bar 1.0) "██████████"))
+  (should (equal (opencog-visualization--performance-bar 0.5) "█████░░░░░"))
+  (should (equal (opencog-visualization--performance-bar 0.0) "░░░░░░░░░░")))
+
+;;; ===========================================================================
+;;; Network Tests
+;;; ===========================================================================
+
+(require 'opencog-network)
+
+(ert-deftest emacogs-test-network-peer-creation ()
+  "Test peer structure creation."
+  (let ((peer (opencog-network-peer-create
+               :id "peer-001"
+               :host "localhost"
+               :port 9090
+               :state 'disconnected)))
+    (should (opencog-network-peer-p peer))
+    (should (equal (opencog-network-peer-id peer) "peer-001"))
+    (should (equal (opencog-network-peer-host peer) "localhost"))
+    (should (= (opencog-network-peer-port peer) 9090))
+    (should (eq (opencog-network-peer-state peer) 'disconnected))))
+
+(ert-deftest emacogs-test-network-message-creation ()
+  "Test message structure creation."
+  (let ((msg (opencog-network-message-create
+              :type 'sync-request
+              :sender "node-001"
+              :timestamp 1234567890.0
+              :payload '(:data "test"))))
+    (should (opencog-network-message-p msg))
+    (should (eq (opencog-network-message-type msg) 'sync-request))
+    (should (equal (opencog-network-message-sender msg) "node-001"))))
+
+(ert-deftest emacogs-test-network-delta-creation ()
+  "Test delta structure creation."
+  (let ((delta (opencog-network-delta-create
+                :added '(atom1 atom2)
+                :modified nil
+                :removed '(key1)
+                :timestamp 1234567890.0
+                :source-id "peer-001")))
+    (should (opencog-network-delta-p delta))
+    (should (= (length (opencog-network-delta-added delta)) 2))
+    (should (= (length (opencog-network-delta-removed delta)) 1))))
+
+(ert-deftest emacogs-test-network-vector-clock-increment ()
+  "Test vector clock increment operation."
+  (let ((opencog-network-local-id "node-001")
+        (opencog-network-vector-clock nil))
+    (opencog-network-vector-clock-init)
+    (should (= (cdr (assoc "node-001" opencog-network-vector-clock)) 0))
+    (opencog-network-vector-clock-increment)
+    (should (= (cdr (assoc "node-001" opencog-network-vector-clock)) 1))
+    (opencog-network-vector-clock-increment)
+    (should (= (cdr (assoc "node-001" opencog-network-vector-clock)) 2))))
+
+(ert-deftest emacogs-test-network-vector-clock-merge ()
+  "Test vector clock merge operation."
+  (let ((clock1 '(("A" . 2) ("B" . 3)))
+        (clock2 '(("A" . 1) ("B" . 4) ("C" . 2))))
+    (let ((merged (opencog-network-vector-clock-merge clock1 clock2)))
+      ;; A should take max of 2 and 1 = 2
+      (should (= (cdr (assoc "A" merged)) 2))
+      ;; B should take max of 3 and 4 = 4
+      (should (= (cdr (assoc "B" merged)) 4))
+      ;; C should be included from clock2
+      (should (= (cdr (assoc "C" merged)) 2)))))
+
+;;; ===========================================================================
+;;; REPL Tests
+;;; ===========================================================================
+
+(require 'emacogs-repl)
+
+(ert-deftest emacogs-test-repl-cmd-node ()
+  "Test REPL node command."
+  (let ((opencog-atomspace (make-hash-table :test 'equal))
+        (opencog-atomspace-index (make-hash-table :test 'eq)))
+    (let ((result (emacogs-repl--cmd-node 'ConceptNode "TestREPL")))
+      (should (stringp result))
+      (should (string-match-p "Created:" result))
+      (should (= (opencog-atomspace-size) 1)))))
+
+(ert-deftest emacogs-test-repl-cmd-atoms ()
+  "Test REPL atoms command."
+  (let ((opencog-atomspace (make-hash-table :test 'equal))
+        (opencog-atomspace-index (make-hash-table :test 'eq)))
+    ;; Empty atomspace
+    (should (equal (emacogs-repl--cmd-atoms) "Atomspace is empty"))
+    ;; With atoms
+    (opencog-atomspace-add (opencog-atom-create-node 'ConceptNode "A"))
+    (let ((result (emacogs-repl--cmd-atoms)))
+      (should (string-match-p "ConceptNode" result)))))
+
+(ert-deftest emacogs-test-repl-cmd-stats ()
+  "Test REPL stats command."
+  (let ((opencog-atomspace (make-hash-table :test 'equal))
+        (opencog-atomspace-index (make-hash-table :test 'eq)))
+    (opencog-atomspace-add (opencog-atom-create-node 'ConceptNode "A"))
+    (let ((result (emacogs-repl--cmd-stats)))
+      (should (stringp result))
+      (should (string-match-p "Atoms:" result)))))
+
+(ert-deftest emacogs-test-repl-cmd-tv ()
+  "Test REPL truth value command."
+  (let ((tv (emacogs-repl--cmd-tv 0.8 0.9)))
+    (should (opencog-truth-value-p tv))
+    (should (= (opencog-truth-value-strength tv) 0.8))
+    (should (= (opencog-truth-value-confidence tv) 0.9))))
+
+(ert-deftest emacogs-test-repl-cmd-help ()
+  "Test REPL help command."
+  (let ((result (emacogs-repl--cmd-help)))
+    (should (stringp result))
+    (should (string-match-p "Commands:" result))
+    (should (string-match-p "node" result))))
+
+(ert-deftest emacogs-test-repl-completion-candidates ()
+  "Test REPL completion candidates."
+  (let ((candidates (emacogs-repl--completion-candidates)))
+    (should (member "node" candidates))
+    (should (member "link" candidates))
+    (should (member "query" candidates))
+    (should (member "help" candidates))))
+
+;;; ===========================================================================
+;;; Benchmark Tests
+;;; ===========================================================================
+
+(require 'emacogs-benchmark)
+
+(ert-deftest emacogs-test-benchmark-result-creation ()
+  "Test benchmark result structure creation."
+  (let ((result (emacogs-benchmark-result-create
+                 :name "test-benchmark"
+                 :iterations 100
+                 :total-time 1.0
+                 :mean-time 0.01
+                 :min-time 0.005
+                 :max-time 0.02
+                 :throughput 100.0)))
+    (should (emacogs-benchmark-result-p result))
+    (should (equal (emacogs-benchmark-result-name result) "test-benchmark"))
+    (should (= (emacogs-benchmark-result-iterations result) 100))))
+
+(ert-deftest emacogs-test-benchmark-format-time ()
+  "Test time formatting functions."
+  ;; Nanoseconds
+  (should (string-match-p "ns" (emacogs-benchmark-format-time 0.0000001)))
+  ;; Microseconds
+  (should (string-match-p "µs" (emacogs-benchmark-format-time 0.0001)))
+  ;; Milliseconds
+  (should (string-match-p "ms" (emacogs-benchmark-format-time 0.01)))
+  ;; Seconds
+  (should (string-match-p "s" (emacogs-benchmark-format-time 1.5))))
+
+(ert-deftest emacogs-test-benchmark-format-throughput ()
+  "Test throughput formatting functions."
+  ;; Mega ops/s
+  (should (string-match-p "M ops/s" (emacogs-benchmark-format-throughput 1500000)))
+  ;; Kilo ops/s
+  (should (string-match-p "K ops/s" (emacogs-benchmark-format-throughput 15000)))
+  ;; Regular ops/s
+  (should (string-match-p "ops/s" (emacogs-benchmark-format-throughput 500))))
+
+(ert-deftest emacogs-test-benchmark-measure ()
+  "Test benchmark measure function."
+  (let ((emacogs-benchmark-default-iterations 10)
+        (emacogs-benchmark-warmup-iterations 2)
+        (counter 0))
+    (let ((result (emacogs-benchmark-measure
+                   (lambda () (cl-incf counter))
+                   10)))
+      (should (emacogs-benchmark-result-p result))
+      (should (= (emacogs-benchmark-result-iterations result) 10))
+      (should (> (emacogs-benchmark-result-total-time result) 0))
+      (should (> (emacogs-benchmark-result-throughput result) 0)))))
+
+(ert-deftest emacogs-test-benchmark-compare ()
+  "Test benchmark comparison."
+  (let ((result1 (emacogs-benchmark-result-create
+                  :name "fast"
+                  :mean-time 0.001))
+        (result2 (emacogs-benchmark-result-create
+                  :name "slow"
+                  :mean-time 0.01)))
+    (let ((comparison (emacogs-benchmark-compare result1 result2)))
+      ;; result1 is faster since mean1 < mean2
+      (should (= (plist-get comparison :faster) 1))
+      ;; ratio = mean2/mean1 = 10, showing result2 is 10x slower
+      (should (= (plist-get comparison :ratio) 10.0))
+      ;; speedup = mean1/mean2 = 0.1, showing result1 takes 1/10 the time
+      (should (= (plist-get comparison :speedup) 0.1)))))
+
+;;; ===========================================================================
 ;;; Utility function for testing
 ;;; ===========================================================================
 
