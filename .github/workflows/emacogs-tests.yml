@@ -1,0 +1,88 @@
+name: Emacogs Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'lisp/emacogs*.el'
+      - 'lisp/opencog*.el'
+      - 'lisp/agent-zero.el'
+      - 'lisp/infermacs-limbo.el'
+      - 'test/lisp/emacogs-test.el'
+      - '.github/workflows/emacogs-tests.yml'
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - 'lisp/emacogs*.el'
+      - 'lisp/opencog*.el'
+      - 'lisp/agent-zero.el'
+      - 'lisp/infermacs-limbo.el'
+      - 'test/lisp/emacogs-test.el'
+      - '.github/workflows/emacogs-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs_version:
+          - 29.1
+          - 29.3
+    name: Test (Emacs ${{ matrix.emacs_version }})
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Emacs
+      uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs_version }}
+    
+    - name: Check Emacs version
+      run: emacs --version
+    
+    - name: Verify module syntax
+      run: |
+        echo "Checking Emacogs module syntax..."
+        for module in lisp/emacogs*.el lisp/opencog*.el lisp/agent-zero.el lisp/infermacs-limbo.el; do
+          if [ -f "$module" ]; then
+            echo "✓ $module exists"
+          else
+            echo "✗ $module NOT FOUND"
+            exit 1
+          fi
+        done
+    
+    - name: Copy test files to isolated directory
+      run: |
+        mkdir -p /tmp/emacogs-test
+        cp lisp/emacogs*.el lisp/opencog*.el lisp/agent-zero.el lisp/infermacs-limbo.el /tmp/emacogs-test/
+        cp test/lisp/emacogs-test.el /tmp/emacogs-test/
+    
+    - name: Run ERT tests
+      run: |
+        cd /tmp/emacogs-test
+        emacs --batch -L . -l ert -l emacogs-test.el -f ert-run-tests-batch-and-exit
+
+  lint:
+    runs-on: ubuntu-latest
+    name: Byte-compile Check
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Emacs
+      uses: purcell/setup-emacs@master
+      with:
+        version: 29.3
+    
+    - name: Byte-compile Emacogs modules
+      run: |
+        mkdir -p /tmp/emacogs-compile
+        cp lisp/emacogs*.el lisp/opencog*.el lisp/agent-zero.el lisp/infermacs-limbo.el /tmp/emacogs-compile/
+        cd /tmp/emacogs-compile
+        emacs --batch -L . -f batch-byte-compile *.el
+        echo "Byte-compilation successful!"
