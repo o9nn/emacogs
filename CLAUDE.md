@@ -22,6 +22,7 @@
 | Visualization | `lisp/opencog-visualization.el` | ASCII graphs, heat maps, dashboards |
 | REPL | `lisp/emacogs-repl.el` | Interactive command interface |
 | Network | `lisp/opencog-network.el` | Distributed atomspace sync (v1.2.0) |
+| Benchmark | `lisp/emacogs-benchmark.el` | Performance benchmarking framework (v1.2.0) |
 | Main | `lisp/emacogs.el` | System integration, initialization |
 
 ## Directory Structure
@@ -173,14 +174,16 @@ Hash tables are NOT thread-safe. Use:
 - [x] CI/CD integration with GitHub Actions (`emacogs-tests.yml`)
 - [x] Fixed channel FIFO ordering in `infermacs-limbo.el`
 - [x] Added `opencog-create-constellation-from-string` function
+- [x] Test coverage for all core modules (58 tests)
+- [x] Performance benchmarking framework (`emacogs-benchmark.el`)
+- [x] Fixed `opencog-attention-value-create` keyword arguments in learning/persistence modules
+- [x] Fixed `opencog-atomspace-stats` to return complete statistics
 
 ### In Progress
-- [ ] Test coverage for all core functions
-- [ ] Performance benchmarking framework
-
-### Planned (v1.2.0)
 - [ ] Optimize hash table operations
 - [ ] Lazy evaluation for large atomspaces
+
+### Planned (v1.2.0)
 - [ ] MOSES-style evolutionary learning
 - [ ] Import from external knowledge bases (JSON-LD, RDF)
 
@@ -229,11 +232,11 @@ Hash tables are NOT thread-safe. Use:
 
 ## Statistics
 
-- **Total modules**: 11 (10 core + 1 network)
-- **Lines of code**: ~4,500+
-- **Interactive commands**: 40+
+- **Total modules**: 12 (10 core + 1 network + 1 benchmark)
+- **Lines of code**: ~5,000+
+- **Interactive commands**: 45+
 - **Example functions**: 12
-- **Test cases**: 25+
+- **Test cases**: 58
 
 ## Contact & Resources
 

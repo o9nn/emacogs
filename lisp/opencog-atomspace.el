@@ -248,13 +248,22 @@ but care should be taken if using async operations.")
 (defun opencog-atomspace-stats ()
   "Return statistics about the atomspace."
   (let ((type-counts (make-hash-table :test 'eq))
-        (total 0))
+        (total 0)
+        (node-count 0)
+        (link-count 0))
     (maphash (lambda (_key atom)
                (cl-incf total)
                (let ((type (opencog-atom-type atom)))
-                 (puthash type (1+ (gethash type type-counts 0)) type-counts)))
+                 (puthash type (1+ (gethash type type-counts 0)) type-counts)
+                 ;; Count nodes vs links
+                 (if (opencog-atom-outgoing atom)
+                     (cl-incf link-count)
+                   (cl-incf node-count))))
              opencog-atomspace)
-    (list :total total
+    (list :total-atoms total
+          :node-count node-count
+          :link-count link-count
+          :type-count (hash-table-count type-counts)
           :by-type type-counts)))
 
 ;;; Interactive Functions

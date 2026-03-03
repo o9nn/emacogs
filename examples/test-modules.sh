@@ -12,6 +12,12 @@ modules=(
     "lisp/agent-zero.el"
     "lisp/infermacs-limbo.el"
     "lisp/opencog-org-constellations.el"
+    "lisp/opencog-persistence.el"
+    "lisp/opencog-learning.el"
+    "lisp/opencog-visualization.el"
+    "lisp/opencog-network.el"
+    "lisp/emacogs-repl.el"
+    "lisp/emacogs-benchmark.el"
     "lisp/emacogs.el"
 )
 

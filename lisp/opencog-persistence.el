@@ -115,15 +115,19 @@ Set to nil to disable auto-save."
                   (plist-get tv-data :confidence))))
            (av (when av-data
                  (opencog-attention-value-create
-                  (plist-get av-data :sti)
-                  (plist-get av-data :lti)
-                  (plist-get av-data :vlti)))))
-      (if outgoing
-          (opencog-atom-create-link
-           type
-           (mapcar #'opencog-persistence-deserialize-atom outgoing)
-           tv av)
-        (opencog-atom-create-node type name tv av)))))
+                  :sti (plist-get av-data :sti)
+                  :lti (plist-get av-data :lti)
+                  :vlti (plist-get av-data :vlti))))
+           (atom (if outgoing
+                     (opencog-atom-create-link
+                      type
+                      (mapcar #'opencog-persistence-deserialize-atom outgoing)
+                      tv)
+                   (opencog-atom-create-node type name tv))))
+      ;; Set attention value if present
+      (when av
+        (setf (opencog-atom-attention-value atom) av))
+      atom)))
 
 (defun opencog-persistence-serialize-atomspace ()
   "Serialize the current atomspace to S-expression format.
