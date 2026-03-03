@@ -170,10 +170,12 @@ Hash tables are NOT thread-safe. Use:
 - [x] Node discovery and connection management
 - [x] Distributed query execution
 - [x] CLAUDE.md development guide
+- [x] CI/CD integration with GitHub Actions (`emacogs-tests.yml`)
+- [x] Fixed channel FIFO ordering in `infermacs-limbo.el`
+- [x] Added `opencog-create-constellation-from-string` function
 
 ### In Progress
 - [ ] Test coverage for all core functions
-- [ ] CI/CD integration with GitHub Actions
 - [ ] Performance benchmarking framework
 
 ### Planned (v1.2.0)
